@@ -1,0 +1,6 @@
+# CRLF from a Windows checkout breaks scripts inside the container.
+*.sh text eol=lf
+Dockerfile* text eol=lf
+docker/** text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf

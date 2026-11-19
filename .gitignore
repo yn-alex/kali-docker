@@ -1,0 +1,21 @@
+# Local settings (copy .env.example to .env)
+.env
+.env.*
+!.env.example
+
+# Secret files, e.g. for compose secrets
+secrets/
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Agent worktrees and local tooling
+.claude/

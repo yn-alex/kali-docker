@@ -1,0 +1,45 @@
+name: Build and publish images
+
+# Builds the cli and gui targets of the root Dockerfile natively on amd64 and
+# arm64 runners, smoke-tests them, and publishes multi-arch tags on GHCR:
+#   docker pull ghcr.io/<owner>/<repo>:cli      (also :latest)
+#   docker pull ghcr.io/<owner>/<repo>:gui
+# The steps live once in image.yml (reusable workflow). Each target is its own
+# job here, so a failing gui build does not block publishing cli, and the
+# other way round. Pull requests build and test but push nothing. Kali is a
+# rolling release, so the weekly schedule republishes fresh images.
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 4 * * 1"  # Mondays 04:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Never cancel a run that may be publishing.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  cli:
+    uses: ./.github/workflows/image.yml
+    with:
+      target: cli
+    permissions:
+      contents: read
+      packages: write
+
+  gui:
+    uses: ./.github/workflows/image.yml
+    with:
+      target: gui
+    permissions:
+      contents: read
+      packages: write

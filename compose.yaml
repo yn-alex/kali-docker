@@ -1,0 +1,71 @@
+# One entry point on macOS, Windows and Linux (Docker Desktop or Engine).
+#   CLI shell:   docker compose run --rm kali
+#   Desktop:     docker compose --profile gui up -d
+#                RDP to 127.0.0.1:3389 or browse http://127.0.0.1:6080/vnc.html
+#   Stop:        docker compose --profile gui down     (add -v to delete the home volume)
+# Settings live in .env (copy .env.example). Default login: kali / kali,
+# noVNC password kalikali; change them with KALI_PASSWORD / KALI_VNC_PASSWORD.
+#
+# Images: the published ones are pulled by default; if the pull fails, compose
+# builds from the Dockerfile in this folder.
+#   KALI_IMAGE     image name without tag (default: the published image)
+#   KALI_CLI_TAG   tag of the cli image (default: cli)
+#   KALI_GUI_TAG   tag of the gui image (default: gui)
+#   KALI_PULL      daily (default), always, missing, never or build
+#                  (build = always build locally, e.g. to change KALI_PACKAGES)
+#   KALI_PACKAGES  tool set for local builds (empty = the Dockerfile's default set)
+x-build: &build
+  context: .
+  args:
+    KALI_PACKAGES: ${KALI_PACKAGES:-}
+
+x-kali: &kali
+  pull_policy: ${KALI_PULL:-daily}
+  environment:
+    PUID: ${KALI_UID:-1000}
+    PGID: ${KALI_GID:-1000}
+    # Passed through only when set (no value in compose = take it from the shell/.env if present).
+    KALI_PASSWORD:
+    KALI_VNC_PASSWORD:
+  volumes:
+    - kali-home:/home/kali
+    - type: bind
+      source: ${KALI_WORKDIR:-~/kali-workspace}
+      target: /home/kali/work
+      # On SELinux hosts (Fedora, RHEL) the bind mount needs relabeling:
+      # bind:
+      #   selinux: z
+  # For VPN clients and raw-socket tools (Docker Desktop: inside its VM only):
+  # cap_add: [NET_ADMIN, NET_RAW]
+  # devices: [/dev/net/tun]
+
+services:
+  kali:
+    <<: *kali
+    build:
+      <<: *build
+      target: cli
+    image: ${KALI_IMAGE:-ghcr.io/yn-alex/kali-docker}:${KALI_CLI_TAG:-cli}
+    profiles: [cli]
+    hostname: kali
+    stdin_open: true
+    tty: true
+
+  kali-gui:
+    <<: *kali
+    profiles: [gui]
+    build:
+      <<: *build
+      target: gui
+    image: ${KALI_IMAGE:-ghcr.io/yn-alex/kali-docker}:${KALI_GUI_TAG:-gui}
+    hostname: kali
+    ports:
+      # Host side is loopback only (default passwords). Override with
+      # KALI_RDP=<addr>:<port>, e.g. 127.0.0.1:13389 if the host's own RDP uses 3389.
+      - "${KALI_RDP:-127.0.0.1:3389}:3389"
+      - "${KALI_NOVNC:-127.0.0.1:6080}:6080"
+    shm_size: 512m  # browsers and XFCE crash with Docker's 64 MB default
+    restart: unless-stopped
+
+volumes:
+  kali-home:

@@ -4,18 +4,16 @@ Kali Linux in Docker, in two flavours: a command-line container (`cli`) and a fu
 over RDP or in the browser. Images are built for amd64 and arm64, so they run on macOS, Windows and Linux. They
 build on the official `kalilinux/kali-rolling` image and are published at `ghcr.io/yn-alex/kali-docker`.
 
-## Contents
+Default logins:
 
-- [Requirements](#requirements)
-- [Quick start](#quick-start)
-- [Connecting to the desktop](#connecting-to-the-desktop)
-- [Your files](#your-files)
-- [Settings](#settings)
-- [Images and tags](#images-and-tags)
-- [Included tools](#included-tools)
-- [Good to know](#good-to-know)
-- [Building locally and contributing](#building-locally-and-contributing)
-- [License](#license)
+| Access | User | Password |
+|---|---|---|
+| RDP (`localhost:3389`) | `kali` | `kali` |
+| Browser / noVNC (`http://localhost:6080/vnc.html`) | none | `kalikali` |
+| `sudo` inside the container | `kali` | `kali` |
+
+Change them with `KALI_PASSWORD` and `KALI_VNC_PASSWORD` in `.env` (see [Settings](#settings)). The ports listen
+on `127.0.0.1` only, so with the defaults the desktop is reachable only from your own machine.
 
 ## Requirements
 
@@ -50,9 +48,8 @@ docker run -d --name kali-gui --shm-size=512m -p 127.0.0.1:3389:3389 -p 127.0.0.
   from the App Store. Linux: Remmina or FreeRDP. Accept the self-signed certificate warning.
 - Or open `http://localhost:6080/vnc.html` in a browser (noVNC).
 
-Logins: user `kali`, password `kali` for RDP. noVNC asks for `kalikali`: the VNC server rejects passwords
-shorter than 6 characters. Change them with `KALI_PASSWORD` and `KALI_VNC_PASSWORD` (see [Settings](#settings)).
-The ports listen on `127.0.0.1` only, because the default passwords are public.
+Log in with the [default logins](#kali-docker) above. The noVNC password is longer because the VNC server
+rejects passwords shorter than 6 characters.
 
 ## Your files
 
